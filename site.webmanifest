@@ -1,6 +1,6 @@
 {
-  "name": "Chat Card",
-  "short_name": "Chat Card",
+  "name": "Chat Parser",
+  "short_name": "Chat Parser",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
