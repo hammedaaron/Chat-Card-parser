@@ -1,0 +1,5 @@
+{
+  "name": "ChatCard Parser",
+  "description": "A high-performance analytical tool for ingesting and scanning massive chat export documents using a dense grid-based message card system.",
+  "requestFramePermissions": []
+}
