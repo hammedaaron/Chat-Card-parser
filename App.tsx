@@ -8,9 +8,9 @@ import Header from './components/Header.tsx';
 import GridMessageCard from './components/GridMessageCard.tsx';
 import MessageModal from './components/MessageModal.tsx';
 
-const CARD_HEIGHT = 128;
-const GUTTER = 1; 
-const ROW_HEIGHT = CARD_HEIGHT + GUTTER;
+// Dynamic height calculation for better mobile fitting
+const getCardHeight = (cols: number) => (cols === 1 ? 120 : 140);
+const GUTTER = 1;
 
 const App: React.FC = () => {
   const [meta, setMeta] = useState<SessionMetadata | null>(null);
@@ -32,13 +32,16 @@ const App: React.FC = () => {
     timeRange: [0, 23],
     sortOrder: 'asc',
     page: 1,
-    pageSize: 1000 
+    pageSize: 200 // More mobile-friendly batch size for smooth rendering
   });
+
+  const rowHeight = getCardHeight(columns) + GUTTER;
 
   useEffect(() => {
     const updateCols = () => {
       const w = window.innerWidth;
-      if (w < 640) setColumns(2);
+      if (w < 480) setColumns(1);
+      else if (w < 640) setColumns(2);
       else if (w < 768) setColumns(3);
       else if (w < 1024) setColumns(4);
       else if (w < 1280) setColumns(5);
@@ -64,7 +67,6 @@ const App: React.FC = () => {
     setProgress(0);
     
     const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-
     const senders = new Set<string>();
     const dates = new Set<string>();
     let total = 0;
@@ -135,8 +137,8 @@ const App: React.FC = () => {
   }, [messages]);
 
   const totalRows = Math.ceil(messages.length / columns);
-  const startRow = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 2);
-  const endRow = Math.min(totalRows, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + 2);
+  const startRow = Math.max(0, Math.floor(scrollTop / rowHeight) - 2);
+  const endRow = Math.min(totalRows, Math.ceil((scrollTop + viewportHeight) / rowHeight) + 2);
 
   const visibleItems = useMemo(() => {
     const items = [];
@@ -146,7 +148,7 @@ const App: React.FC = () => {
         if (index < messages.length) {
           items.push({
             msg: messages[index],
-            top: row * ROW_HEIGHT,
+            top: row * rowHeight,
             left: `${(col / columns) * 100}%`,
             width: `${(1 / columns) * 100}%`
           });
@@ -154,7 +156,7 @@ const App: React.FC = () => {
       }
     }
     return items;
-  }, [startRow, endRow, messages, columns]);
+  }, [startRow, endRow, messages, columns, rowHeight]);
 
   const handleReset = async () => {
     if (meta && confirm(`Permanently delete project "${meta.title}"?`)) {
@@ -185,7 +187,7 @@ const App: React.FC = () => {
           onReset={() => {}} 
           onGoHome={handleGoHome} 
         />
-        <div className="flex-1 overflow-y-auto p-8 space-y-12">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 md:space-y-12">
           <Uploader onStart={handleStartParsing} isProcessing={isProcessing} progress={progress} />
           
           {allProjects.length > 0 && (
@@ -194,24 +196,23 @@ const App: React.FC = () => {
                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Saved Projects</h3>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{allProjects.length} AVAILABLE</span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {allProjects.map((project) => (
                   <div 
                     key={project.id}
                     onClick={() => handleSelectProject(project)}
-                    className="group bg-white border border-slate-200 p-6 rounded-2xl hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-50 cursor-pointer transition-all flex items-start gap-5 relative overflow-hidden"
+                    className="group bg-white border border-slate-200 p-4 md:p-6 rounded-2xl hover:border-indigo-400 hover:shadow-xl hover:shadow-indigo-50 cursor-pointer transition-all flex items-start gap-4 md:gap-5 relative overflow-hidden active:scale-[0.98]"
                   >
-                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors">
-                      <svg className="w-6 h-6 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-indigo-600 transition-colors flex-shrink-0">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                     </div>
                     <div className="flex flex-col flex-1 min-w-0">
-                      <h4 className="text-base font-black text-slate-900 truncate mb-1">{project.title}</h4>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-mono font-bold text-slate-400">{(project.fileSize / 1024).toFixed(1)} KB</span>
+                      <h4 className="text-sm md:text-base font-black text-slate-900 truncate mb-1">{project.title}</h4>
+                      <div className="flex items-center gap-2 md:gap-3">
+                        <span className="text-[9px] md:text-[10px] font-mono font-bold text-slate-400">{(project.fileSize / 1024).toFixed(1)} KB</span>
                         <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                        <span className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter">{project.totalMessages.toLocaleString()} NODES</span>
+                        <span className="text-[9px] md:text-[10px] font-black text-indigo-500 uppercase tracking-tighter">{project.totalMessages.toLocaleString()} NODES</span>
                       </div>
-                      <p className="mt-3 text-[10px] text-slate-400 italic">Last accessed {new Date(project.lastUpdated).toLocaleDateString()}</p>
                     </div>
                   </div>
                 ))}
@@ -225,7 +226,7 @@ const App: React.FC = () => {
 
   if (isProcessing) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
         <Uploader onStart={handleStartParsing} isProcessing={true} progress={progress} />
       </div>
     );
@@ -247,14 +248,14 @@ const App: React.FC = () => {
         className="flex-1 overflow-y-auto relative bg-slate-100 custom-scrollbar"
       >
         {loading && (
-          <div className="sticky top-0 left-0 w-full h-[2px] z-50 bg-slate-100 overflow-hidden">
+          <div className="sticky top-0 left-0 w-full h-[3px] z-50 bg-slate-100 overflow-hidden">
             <div className="h-full bg-indigo-600 animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-indigo-600 via-indigo-300 to-indigo-600 bg-[length:200%_100%]"></div>
           </div>
         )}
 
         <div 
           className="relative w-full" 
-          style={{ height: totalRows * ROW_HEIGHT }}
+          style={{ height: totalRows * rowHeight }}
         >
           {visibleItems.length > 0 ? (
             visibleItems.map(({ msg, top, left, width }) => (
@@ -267,11 +268,12 @@ const App: React.FC = () => {
                   top,
                   left,
                   width: `calc(${width} - 1px)`,
+                  height: getCardHeight(columns)
                 }}
               />
             ))
           ) : !loading && (
-            <div className="flex flex-col items-center justify-center h-full text-slate-300 min-h-[400px]">
+            <div className="flex flex-col items-center justify-center h-full text-slate-300 min-h-[400px] p-6 text-center">
               <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
                 <svg className="w-8 h-8 text-slate-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
               </div>
@@ -281,38 +283,37 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="bg-white border-t border-slate-200 px-6 py-2.5 flex flex-col sm:flex-row items-center justify-between z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] gap-4">
-        <div className="flex items-center gap-8">
-          <div className="flex flex-col">
-            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Index Offset</span>
-            <span className="text-xs font-mono font-bold text-slate-700 tracking-tight">
-              {((filters.page-1)*filters.pageSize + 1).toLocaleString()} – {Math.min(filters.page*filters.pageSize, meta?.totalMessages || 0).toLocaleString()}
+      <footer className="bg-white border-t border-slate-200 px-4 md:px-6 py-3 flex flex-row items-center justify-between z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.02)] gap-4">
+        <div className="flex items-center gap-4 md:gap-8 overflow-hidden">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Index</span>
+            <span className="text-[10px] md:text-xs font-mono font-bold text-slate-700 tracking-tight truncate">
+              {((filters.page-1)*filters.pageSize + 1).toLocaleString()}–{Math.min(filters.page*filters.pageSize, meta?.totalMessages || 0).toLocaleString()}
             </span>
           </div>
-          <div className="h-6 w-[1px] bg-slate-100"></div>
-          <div className="flex flex-col">
+          <div className="h-6 w-[1px] bg-slate-100 hidden sm:block"></div>
+          <div className="flex flex-col hidden sm:flex">
             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Active Set</span>
             <span className="text-xs font-bold text-slate-900 tracking-tight">{meta?.totalMessages.toLocaleString()} RECORDS</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 md:gap-3 flex-shrink-0">
           <button 
             disabled={filters.page <= 1}
             onClick={() => {
               setFilters(p => ({ ...p, page: p.page - 1 }));
               if (containerRef.current) containerRef.current.scrollTop = 0;
             }}
-            className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-20 transition-all text-slate-500 hover:text-indigo-600"
+            className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-20 transition-all text-slate-500 hover:text-indigo-600 active:bg-indigo-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
           </button>
           
           <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2 py-1 rounded-xl focus-within:ring-4 focus-within:ring-indigo-50 focus-within:border-indigo-400 transition-all">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter ml-1">Page</span>
             <input 
               type="number"
-              className="w-14 bg-transparent text-center text-xs font-black text-slate-900 outline-none"
+              className="w-8 md:w-14 bg-transparent text-center text-xs font-black text-slate-900 outline-none"
               value={filters.page}
               min={1}
               onChange={e => setFilters(p => ({ ...p, page: Math.max(1, parseInt(e.target.value) || 1) }))}
@@ -326,7 +327,7 @@ const App: React.FC = () => {
               setFilters(p => ({ ...p, page: p.page + 1 }));
               if (containerRef.current) containerRef.current.scrollTop = 0;
             }}
-            className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-20 transition-all text-slate-500 hover:text-indigo-600"
+            className="p-2 hover:bg-slate-100 rounded-xl disabled:opacity-20 transition-all text-slate-500 hover:text-indigo-600 active:bg-indigo-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
           </button>
