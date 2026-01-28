@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { MessageCard } from '../types';
-import HighlightText from './HighlightText';
+import { MessageCard } from '../types.ts';
+import HighlightText from './HighlightText.tsx';
 
 interface MessageModalProps {
   message: MessageCard | null;
@@ -23,7 +23,6 @@ const MessageModal: React.FC<MessageModalProps> = ({ message, onClose }) => {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex-1 flex flex-col md:flex-row min-h-0">
-          {/* Main Content Area */}
           <div className="flex-1 flex flex-col min-w-0 border-r border-slate-100 bg-white">
             <div className="px-8 py-6 flex items-center justify-between border-b border-slate-50">
               <div className="flex items-center gap-4">
@@ -65,7 +64,6 @@ const MessageModal: React.FC<MessageModalProps> = ({ message, onClose }) => {
             </div>
           </div>
 
-          {/* Sidebar / Metadata View */}
           <div className="w-full md:w-72 bg-slate-50/80 p-6 space-y-8 flex flex-col">
             <div className="hidden md:flex justify-end">
               <button 

@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { chatDB } from './db';
-import { processFile } from './parser';
-import { MessageCard, SessionMetadata, FilterState } from './types';
-import Uploader from './components/Uploader';
-import Header from './components/Header';
-import GridMessageCard from './components/GridMessageCard';
-import MessageModal from './components/MessageModal';
+import { chatDB } from './db.ts';
+import { processFile } from './parser.ts';
+import { MessageCard, SessionMetadata, FilterState } from './types.ts';
+import Uploader from './components/Uploader.tsx';
+import Header from './components/Header.tsx';
+import GridMessageCard from './components/GridMessageCard.tsx';
+import MessageModal from './components/MessageModal.tsx';
 
 const CARD_HEIGHT = 128;
 const GUTTER = 1; 
@@ -63,7 +63,6 @@ const App: React.FC = () => {
     setIsProcessing(true);
     setProgress(0);
     
-    // Generate a unique ID for this project session
     const sessionId = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
     const senders = new Set<string>();
